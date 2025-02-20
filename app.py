@@ -111,7 +111,7 @@ def index():
     # تعيين اللغة الافتراضية إذا لم يتم تعيينها
     if 'lang' not in session:
         session['lang'] = 'ar'  # اللغة الافتراضية هي العربية
-    return render_template('index.html', lang=session['lang'])
+    return render_template(os.path.join(os.getcwd(), 'index.html'), lang=session['lang'])
 
 @app.route('/set_lang/<lang>')
 def set_lang(lang):
