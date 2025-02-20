@@ -1,0 +1,193 @@
+index.html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Trading المتطور</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- اختيار اللغة -->
+<div class="language-selector">
+    <label for="language" id="languageLabel">اختر اللغة:</label>
+    <select id="language" onchange="changeLanguage(this.value)">
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+    </select>
+</div>
+
+        <header>
+            <h1 id="headerTitle">Journal Trading المتطور</h1>
+            <p id="headerDescription">قم بتسجيل تداولاتك وتحليل أدائك بسهولة</p>
+        </header>
+
+        <!-- خيارات المبلغ الأولي -->
+        <div class="portfolio-section">
+            <label for="initialPortfolio" id="initialPortfolioLabel">المبلغ الأولي:</label>
+            <select id="initialPortfolio" class="form-control" onchange="updatePortfolio()">
+                <option value="5000">5000 <span>دولار</span></option>
+                <option value="6000">6000 <span>دولار</span></option>
+                <option value="10000">10000 <span>دولار</span></option>
+                <option value="200000">200000 <span>دولار</span></option>
+            </select>
+        </div>
+
+        <!-- نموذج إضافة تداول -->
+        <form id="tradeForm" class="trade-form">
+            <div class="form-group">
+                <label for="entryTime" id="entryTimeLabel">وقت الدخول:</label>
+                <input type="datetime-local" id="entryTime" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="entryPrice" id="entryPriceLabel">سعر الدخول:</label>
+                <input type="number" step="0.0001" id="entryPrice" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pips" id="pipsLabel">عدد الـ Pips:</label>
+                <input type="number" step="1" id="pips" class="form-control" oninput="calculateExitPrice()">
+            </div>
+
+            <div class="form-group">
+                <label for="exitPrice" id="exitPriceLabel">سعر الخروج:</label>
+                <input type="number" step="0.0001" id="exitPrice" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="stopLoss" id="stopLossLabel">Stop Loss (%):</label>
+                <input type="number" step="0.01" id="stopLoss" class="form-control" value="1">
+            </div>
+
+            <div class="form-group">
+                <label for="currencyPair" id="currencyPairLabel">العملة:</label>
+                <select id="currencyPair" class="form-control">
+                    <option value="EURUSD">EURUSD</option>
+                    <option value="GPUUSD">GPUUSD</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="strategy" id="strategyLabel">الاستراتيجية:</label>
+                <select id="strategy" class="form-control">
+                    <option value="Silver Bullet MODEL">Silver Bullet</option>
+                    <option value="TGIF MODEL">TGIF</option>
+                    <option value="2022 MODEL">2022</option>
+                    <option value="MMXM MODEL">MMXM</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="lotSize" id="lotSizeLabel">حجم اللوت:</label>
+                <input type="number" step="0.01" id="lotSize" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="killzone" id="killzoneLabel">منطقة التداول:</label>
+                <select id="killzone" class="form-control">
+                    <option value="LONDON">لندن</option>
+                    <option value="NYW">نيويورك</option>
+                    <option value="ASIA">آسيا</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitButton">إضافة تداول</button>
+        </form>
+
+        <!-- جدول التداولات -->
+        <div class="trades-table">
+            <h2 id="tradesTableHeader">سجل التداولات</h2>
+            <table id="tradesTable">
+                <thead>
+                    <tr>
+                        <th id="timeHeader">الوقت</th>
+                        <th id="entryPriceHeader">سعر الدخول</th>
+                        <th id="exitPriceHeader">سعر الخروج</th>
+                        <th id="currencyHeader">العملة</th>
+                        <th id="strategyHeader">الاستراتيجية</th>
+                        <th id="lotSizeHeader">حجم اللوت</th>
+                        <th id="zoneHeader">المنطقة</th>
+                        <th id="profitLossHeader">الربح/الخسارة</th>
+                        <th id="actionsHeader">الإجراءات</th>
+                    </tr>
+                </thead>
+                <!-- البيانات تُملأ بواسطة JavaScript -->
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- روابط التصدير -->
+        <div class="export-options">
+            <a href="/export_excel" class="btn-export" id="exportExcel">Excel</a>
+            <a href="/export_pdf" class="btn-export" id="exportPDF">PDF</a>
+            <a href="/export_chart" class="btn-export" id="exportChart">رسم بياني</a>
+        </div>
+
+        <!-- زر الذهاب إلى الرسوم البيانية -->
+        <div class="charts-link">
+            <a href="/charts" class="btn-charts" id="chartsButton">الذهاب إلى الرسوم البيانية</a>
+        </div>
+    </div>
+
+    <script>
+        // دالة لتغيير اللغة
+        function changeLanguage(lang) {
+            const elements = {
+                headerTitle: { ar: "Journal Trading المتطور", en: "Advanced Journal Trading" },
+                headerDescription: { ar: "قم بتسجيل تداولاتك وتحليل أدائك بسهولة", en: "Record your trades and analyze your performance easily" },
+                initialPortfolioLabel: { ar: "المبلغ الأولي:", en: "Initial Portfolio:" },
+                entryTimeLabel: { ar: "وقت الدخول:", en: "Entry Time:" },
+                entryPriceLabel: { ar: "سعر الدخول:", en: "Entry Price:" },
+                pipsLabel: { ar: "عدد الـ Pips:", en: "Number of Pips:" },
+                exitPriceLabel: { ar: "سعر الخروج:", en: "Exit Price:" },
+                stopLossLabel: { ar: "Stop Loss (%):", en: "Stop Loss (%):" },
+                currencyPairLabel: { ar: "العملة:", en: "Currency:" },
+                strategyLabel: { ar: "الاستراتيجية:", en: "Strategy:" },
+                lotSizeLabel: { ar: "حجم اللوت:", en: "Lot Size:" },
+                killzoneLabel: { ar: "منطقة التداول:", en: "Trading Zone:" },
+                submitButton: { ar: "إضافة تداول", en: "Add Trade" },
+                tradesTableHeader: { ar: "سجل التداولات", en: "Trades Log" },
+                timeHeader: { ar: "الوقت", en: "Time" },
+                entryPriceHeader: { ar: "سعر الدخول", en: "Entry Price" },
+                exitPriceHeader: { ar: "سعر الخروج", en: "Exit Price" },
+                currencyHeader: { ar: "العملة", en: "Currency" },
+                strategyHeader: { ar: "الاستراتيجية", en: "Strategy" },
+                lotSizeHeader: { ar: "حجم اللوت", en: "Lot Size" },
+                zoneHeader: { ar: "المنطقة", en: "Zone" },
+                profitLossHeader: { ar: "الربح/الخسارة", en: "Profit/Loss" },
+                actionsHeader: { ar: "الإجراءات", en: "Actions" },
+                exportExcel: { ar: "Excel", en: "Excel" },
+                exportPDF: { ar: "PDF", en: "PDF" },
+                exportChart: { ar: "رسم بياني", en: "Chart" },
+                chartsButton: { ar: "الذهاب إلى الرسوم البيانية", en: "Go to Charts" },
+                currencyUnit: { ar: "دولار", en: "USD" },
+                deleteButton: { ar: "حذف", en: "Delete" }
+            };
+
+            // تغيير النصوص بناءً على اللغة المختارة
+            Object.entries(elements).forEach(([id, text]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = text[lang];
+                }
+            });
+
+            // تغيير اتجاه الصفحة بناءً على اللغة
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+        }
+
+        // تعيين اللغة الافتراضية عند تحميل الصفحة
+        window.onload = function() {
+            const userLanguage = navigator.language || navigator.userLanguage;
+            const defaultLanguage = userLanguage.startsWith('en') ? 'en' : 'ar';
+            document.getElementById('language').value = defaultLanguage;
+            changeLanguage(defaultLanguage);
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>
